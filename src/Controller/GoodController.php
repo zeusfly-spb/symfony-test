@@ -6,7 +6,6 @@ use App\Entity\Good;
 use App\Repository\GoodRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-
 use Symfony\Component\Routing\Attribute\Route;
 
 final class GoodController extends AbstractController
