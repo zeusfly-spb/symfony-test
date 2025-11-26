@@ -13,6 +13,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use App\DTO\RegisterRequest;
+use App\DTO\LoginRequest;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthController extends AbstractController
@@ -43,7 +44,8 @@ class AuthController extends AbstractController
         Request $request,
         JWTTokenManagerInterface $jwtManager,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        ValidatorInterface $validator
     ): JsonResponse {
         // Try to get data from JSON body first (raw)
         $data = json_decode($request->getContent(), true);
@@ -56,8 +58,16 @@ class AuthController extends AbstractController
             ];
         }
 
-        if (!isset($data['email']) || !isset($data['password'])) {
-            return $this->json(['error' => 'Email and password are required'], 400);
+        $loginRequest = new LoginRequest();
+        $loginRequest->email = $data['email'] ?? null;
+        $loginRequest->password = $data['password'] ?? null;
+        $errors = $validator->validate($loginRequest);
+        if (\count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+            return $this->json(['error' => 'Validation failed', 'errors' => $errorMessages], 400);
         }
 
         $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
