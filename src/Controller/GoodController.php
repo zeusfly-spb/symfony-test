@@ -17,7 +17,8 @@ final class GoodController extends AbstractController
         $this->goodRepository = $goodRepository;
     }
 
-    #[Route('/api/goods', name: 'app_api_goods')]
+
+    #[Route('/api/goods', name: 'app_api_goods', methods: ['GET'])]
     public function index(): JsonResponse
     {
         $goods = $this->goodRepository->findAll();
