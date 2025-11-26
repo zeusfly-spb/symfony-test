@@ -2,20 +2,19 @@
 
 namespace App\Controller;
 
-use App\Entity\Good;
 use App\Repository\GoodRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
 
 final class GoodController extends AbstractController
 {
-    private GoodRepository $goodRepository;
-
-    public function __construct(GoodRepository $goodRepository)
-    {
-        $this->goodRepository = $goodRepository;
-    }
+    public function __construct(
+        private GoodRepository $goodRepository,
+        private SerializerInterface $serializer
+    ) {}
 
 
     #[Route('/api/goods', name: 'app_api_goods', methods: ['GET'])]
@@ -23,13 +22,12 @@ final class GoodController extends AbstractController
     {
         $goods = $this->goodRepository->findAll();
 
-        $data = array_map(fn($good) => [
-            'id' => $good->getId(),
-            'name' => $good->getName(),
-            'comment' => $good->getComment(),
-            'count' => $good->getCount(),
-        ], $goods);
-
-        return $this->json($data);
+        $context = new ObjectNormalizerContextBuilder()
+            ->withGroups('good:read')
+            ->toArray();
+        
+        $json = $this->serializer->serialize($goods, 'json', $context);
+        
+        return new JsonResponse(json_decode($json, true), 200);
     }
 }

@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\GoodRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Entity(repositoryClass: GoodRepository::class)]
 class Good
@@ -11,15 +13,23 @@ class Good
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['good:read', 'good:detail', 'good:write'])]
+
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['good:read', 'good:detail', 'good:write'])]
+
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['good:read', 'good:detail', 'good:write'])]
+
     private ?string $comment = null;
 
     #[ORM\Column]
+    #[Groups(['good:read', 'good:detail', 'good:write'])]
+
     private ?int $count = null;
 
     public function getId(): ?int
