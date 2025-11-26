@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use App\DTO\RegisterRequest;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthController extends AbstractController
 {
@@ -79,8 +81,10 @@ class AuthController extends AbstractController
     public function apiRegister(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
-    ): JsonResponse {
+        UserPasswordHasherInterface $passwordHasher,
+        ValidatorInterface $validator
+    ): JsonResponse 
+    {
         // Try to get data from JSON body first (raw)
         $data = json_decode($request->getContent(), true);
 
@@ -93,8 +97,18 @@ class AuthController extends AbstractController
             ];
         }
 
-        if (!isset($data['email']) || !isset($data['password']) || !isset($data['name'])) {
-            return $this->json(['error' => 'Email, password and name are required'], 400);
+        $registerRequest = new RegisterRequest();
+        $registerRequest->email = $data['email'] ?? null;
+        $registerRequest->password = $data['password'] ?? null;
+        $registerRequest->name = $data['name'] ?? null;
+        $errors = $validator->validate($registerRequest);
+
+        if (\count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+            return $this->json(['error' => 'Validation failed', 'errors' => $errorMessages], 400);
         }
 
         // Check if user already exists
@@ -104,9 +118,9 @@ class AuthController extends AbstractController
         }
 
         $user = new User();
-        $user->setEmail($data['email']);
-        $user->setName($data['name']);
-        $user->setPassword($passwordHasher->hashPassword($user, $data['password']));
+        $user->setEmail($registerRequest->email);
+        $user->setName($registerRequest->name);
+        $user->setPassword($passwordHasher->hashPassword($user, $registerRequest->password));
 
         $entityManager->persist($user);
         $entityManager->flush();

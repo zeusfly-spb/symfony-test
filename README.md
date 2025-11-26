@@ -42,6 +42,11 @@ with [FrankenPHP](https://frankenphp.dev) and [Caddy](https://caddyserver.com/) 
 10. [Updating the template](docs/updating.md)
 11. [Troubleshooting](docs/troubleshooting.md)
 
+## Learning Resources
+
+- 📚 [План обучения Symfony + React](docs/learning-plan.md) - Структурированный план изучения с практическими заданиями
+- 📝 [Практические задания](docs/tasks/) - Детальные задания для практики
+
 ## License
 
 Symfony Docker is available under the MIT License.
