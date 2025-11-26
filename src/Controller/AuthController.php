@@ -15,21 +15,19 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use App\DTO\RegisterRequest;
 use App\DTO\LoginRequest;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
 
 class AuthController extends AbstractController
 {
+    public function __construct(private SerializerInterface $serializer) {}
+
+    
     #[Route(path: '/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        // if ($this->getUser()) {
-        //     return $this->redirectToRoute('target_path');
-        // }
-
-        // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
-        // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
-
         return $this->render('security/login.html.twig', ['last_username' => $lastUsername, 'error' => $error]);
     }
 
@@ -47,10 +45,8 @@ class AuthController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator
     ): JsonResponse {
-        // Try to get data from JSON body first (raw)
         $data = json_decode($request->getContent(), true);
 
-        // If JSON parsing failed, try form-data (POST parameters)
         if (!$data && $request->isMethod('POST')) {
             $data = [
                 'email' => $request->request->get('email'),
@@ -70,20 +66,21 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Validation failed', 'errors' => $errorMessages], 400);
         }
 
-        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+        $user = $entityManager->getRepository(User::class)
+            ->findOneBy(['email' => $data['email']]);
         if (!$user || !$passwordHasher->isPasswordValid($user, $data['password'])) {
             return $this->json(['error' => 'Invalid credentials'], 401);
         }
 
         $token = $jwtManager->create($user);
-
+        $context = new ObjectNormalizerContextBuilder()
+            ->withGroups('user:read')
+            ->toArray();
+        $userJson = $this->serializer->serialize($user, 'json', $context);
+        $userData = json_decode($userJson, true);
         return $this->json([
             'token' => $token,
-            'user' => [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'name' => $user->getName(),
-            ]
+            'user' => $userData
         ]);
     }
 
@@ -95,10 +92,8 @@ class AuthController extends AbstractController
         ValidatorInterface $validator
     ): JsonResponse 
     {
-        // Try to get data from JSON body first (raw)
         $data = json_decode($request->getContent(), true);
 
-        // If JSON parsing failed, try form-data (POST parameters)
         if (!$data && $request->isMethod('POST')) {
             $data = [
                 'email' => $request->request->get('email'),
@@ -135,13 +130,15 @@ class AuthController extends AbstractController
         $entityManager->persist($user);
         $entityManager->flush();
 
+        $context = new ObjectNormalizerContextBuilder()
+            ->withGroups('user:read')
+            ->toArray();
+        $userJson = $this->serializer->serialize($user, 'json', $context);
+        $userData = json_decode($userJson, true);
+
         return $this->json([
             'message' => 'User registered successfully',
-            'user' => [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'name' => $user->getName(),
-            ]
+            'user' => $userData
         ], 201);
     }
 
@@ -172,14 +169,14 @@ class AuthController extends AbstractController
         if (!$user) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
+        $context = new ObjectNormalizerContextBuilder()
+            ->withGroups('user:read')
+            ->toArray();
+        $userJson = $this->serializer->serialize($user, 'json', $context);
+        $userData = json_decode($userJson, true);
 
         return $this->json([
-            'user' => [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'name' => $user->getName(),
-                'roles' => $user->getRoles(),
-            ]
+            'user' => $userData
         ]);
     }
 }
