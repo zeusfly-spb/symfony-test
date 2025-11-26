@@ -27,6 +27,8 @@
 ## Текущие задания
 
 - [task-1.1-validation.md](./task-1.1-validation.md) - Валидация и DTO
+- [task-1.2-serializer.md](./task-1.2-serializer.md) - Serializer и группы сериализации
+- [task-1.3-crud.md](./task-1.3-crud.md) - Полный CRUD для товаров
 - Другие задания будут добавлены по мере прохождения плана обучения
 
 ## Советы
