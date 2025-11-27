@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\GoodRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use App\Entity\User;
 
 
 #[ORM\Entity(repositoryClass: GoodRepository::class)]
@@ -29,8 +30,12 @@ class Good
 
     #[ORM\Column]
     #[Groups(['good:read', 'good:detail', 'good:write'])]
-
     private ?int $count = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['good:detail'])]
+    private ?User $user = null;
 
     public function getId(): ?int
     {
@@ -69,6 +74,18 @@ class Good
     public function setCount(int $count): static
     {
         $this->count = $count;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
 
         return $this;
     }

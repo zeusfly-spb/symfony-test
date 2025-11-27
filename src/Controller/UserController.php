@@ -38,7 +38,7 @@ final class UserController extends AbstractController
         }
         
         // Используем группу user:detail (с email и roles)
-        $context = (new ObjectNormalizerContextBuilder())
+        $context = new ObjectNormalizerContextBuilder()
             ->withGroups('user:detail')
             ->toArray();
         
